@@ -4,6 +4,8 @@ var express = require("express");
 var expressHandlebars = require("express-handlebars");
 var logger = require("morgan");
 var mongoose = require("mongoose");
+var axios = require("axios");
+var cheerio = require("cheerio");
 
 // Our scraping tools
 // Axios is a promised-based http library, similar to jQuery's Ajax method
@@ -37,23 +39,23 @@ app.use(express.static(process.cwd() + "/public"));
 
 app.engine("handlebars", expressHandlebars({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
-app.set('index', __dirname + '/views');
+// app.set('index', __dirname + '/views');
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoScraper";
 // Connect to the Mongo DB
-mongoose.connect("MONGODB", { useNewUrlParser: true });
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 
-var db = mongoose.connection;
+var conn = mongoose.connection;
 
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", function() {
+conn.on("error", console.error.bind(console, "connection error:"));
+conn.once("open", function() {
     console.log("Connected to Mongoose!");
 });
 
 // Routes
 var routes = require("./controller/controller.js");
 app.use("/", routes);
-// // Simple index route
+// Simple index route
 // app.get("/", function(req, res) {
 //     res.sendFile(path.join(__dirname + "./public/index.html"));
 // });
@@ -65,28 +67,28 @@ app.use("/", routes);
 //     var $ = cheerio.load(response.data);
 
 //     // Now, we grab every h2 within an article tag, and do the following:
-//     $("article h2").each(function(i, element) {
+//     $("article h4").each(function(i, element) {
 //       // Save an empty result object
 //       var result = {};
 
 //       // Add the text and href of every link, and save them as properties of the result object
 //       result.title = $(this)
-//         .children("a")
 //         .text();
 //       result.link = $(this)
-//         .children("a")
+//         .parent("a")
 //         .attr("href");
 
 //       // Create a new Article using the `result` object built from scraping
-//       db.Article.create(result)
-//         .then(function(dbArticle) {
-//           // View the added result in the console
-//           console.log(dbArticle);
-//         })
-//         .catch(function(err) {
-//           // If an error occurred, log it
-//           console.log(err);
-//         });
+//       // this is what you need to save after hit saveArticle button
+//       // db.Article.create(result)
+//       //   .then(function(dbArticle) {
+//       //     // View the added result in the console
+//       //     console.log(dbArticle);
+//       //   })
+//       //   .catch(function(err) {
+//       //     // If an error occurred, log it
+//       //     console.log(err);
+//       //   });
 //     });
 
 //     // Send a message to the client
@@ -94,7 +96,7 @@ app.use("/", routes);
 //   });
 // });
 
-// // Route for getting all Articles from the db
+// Route for getting all Articles from the db
 // app.get("/articles", function(req, res) {
 //   // Grab every document in the Articles collection
 //   db.Article.find({})
@@ -108,7 +110,7 @@ app.use("/", routes);
 //     });
 // });
 
-// // Route for grabbing a specific Article by id, populate it with it's note
+// Route for grabbing a specific Article by id, populate it with it's note
 // app.get("/articles/:id", function(req, res) {
 //   // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
 //   db.Article.findOne({ _id: req.params.id })
@@ -124,7 +126,17 @@ app.use("/", routes);
 //     });
 // });
 
-// // Route for saving/updating an Article's associated Note
+// app.post("/note/save/:id",function(req, res) {
+//   var newNote = new db.Note ({
+//     article: req.body.id,
+//     body: req.body.text
+//   });
+//   newNote.save(function(error, note) {
+//     return db.Article.findOneAndUpdate
+//   })
+// })
+
+// Route for saving/updating an Article's associated Note
 // app.post("/articles/:id", function(req, res) {
 //   // Create a new note and pass the req.body to the entry
 //   db.Note.create(req.body)

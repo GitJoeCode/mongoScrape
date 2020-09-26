@@ -18,45 +18,59 @@ router.get("/", function(req, res) {
 });
 
 router.get("/scrape", function(req, res) {
-  axios.get("http://www.theonion.com/").then(function(error, response, html) {
-    var $ = cheerio.load(html);
+  axios.get("http://www.theonion.com/").then(async function(response) {
+    var $ = cheerio.load(response.data);
     var titlesArray = [];
+    $("h4.sc-1qoge05-0 gtIwiT").map(function(i, element) {
+      console.log(element.html())
+    })
+    //h4.sc-1qoge05-0 gtIwiT
+    // Promise.all($("h4.sc-1qoge05-0 gtIwiT").map(function(i, element) {
+    //   var result = {};
 
-    $(".c-entry-box--compact__title").each(function(i, element) {
-      var result = {};
+    //   result.title = $(this)
+    //     .children("p")
+    //     .text();
+    //   result.link = $(this)
+    //     .children("a")
+    //     .attr("href");
+    //   console.log(result);
+    //   if (result.title !== "" && result.link !== "") {
+    //     if (titlesArray.indexOf(result.title) == -1) {
+    //       titlesArray.push(result.title);
 
-      result.title = $(this)
-        .children("a")
-        .text();
-      result.link = $(this)
-        .children("a")
-        .attr("href");
+    //       return Article.count({ title: result.title }, function(err, test) {
+    //         if (test === 0) {
+    //           var entry = new Article(result);
 
-      if (result.title !== "" && result.link !== "") {
-        if (titlesArray.indexOf(result.title) == -1) {
-          titlesArray.push(result.title);
-
-          Article.count({ title: result.title }, function(err, test) {
-            if (test === 0) {
-              var entry = new Article(result);
-
-              entry.save(function(err, doc) {
-                if (err) {
-                  console.log(err);
-                } else {
-                  console.log(doc);
-                }
-              });
-            }
-          });
-        } else {
-          console.log("Article already exists.");
-        }
-      } else {
-        console.log("Not saved to DB, missing data");
-      }
-    });
-    res.redirect("/");
+    //           return entry.save(function(err, doc) {
+    //             if (err) {
+    //               console.log(err);
+    //               // res.send({err})
+    //               return(err)
+    //             } else {
+    //               console.log(doc);
+    //               // res.send("success")
+    //               return(doc)
+    //             }
+    //           });
+    //         }
+    //       });
+    //     } else {
+    //       console.log("Article already exists.");
+    //       // res.send("Article already exists.")
+    //     }
+    //   } else {
+    //     console.log("Not saved to DB, missing data");
+    //     // res.send("Not saved to DB, missing data")
+    //   }
+    // }))
+    // .then(function(result) {
+    //   console.log(result)
+    // }).catch(function(err) {
+    //   console.log(err)
+    // })
+    // res.redirect("/");
   });
 });
 router.get("/articles", function(req, res) {
